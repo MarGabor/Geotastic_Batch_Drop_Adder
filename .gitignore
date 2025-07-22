@@ -3,11 +3,13 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-# test
+# prerequisites
+prerequisites/
 
 # I/O directories
 chunked_csv/
 data/
+page_sources/
 
 # User-specific files
 *.rsuser

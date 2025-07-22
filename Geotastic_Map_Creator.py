@@ -3,7 +3,13 @@ import pandas
 import datetime
 import os
 import math
-import selenium
+import time
+import getpass
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+
+global url_count
 
 #defining path to script
 def set_script_path():
@@ -90,10 +96,80 @@ def split_csv(csv_path, out_path, chunk_size):
 
     return out_file_path_list
 
-def upload_chunks_to_geotastic(chunked_csv_path_list):
+def write_page_source_to_file(url, source):
 
-    #build web driver
-    driver = selenium.webdriver.Firefox()
+    global url_count
+    url_count += 1
+    file_path = os.path.join((os.path.join(".","page_sources")), str(url_count)) + ".txt"
+    with open(file_path, 'w', encoding="utf-8") as page_source_file:
+        page_source_file.write(url)
+        page_source_file.write("\n")
+        page_source_file.write("\n")
+        page_source_file.write(source)
+
+def navigate_to_drop_editor(driver, drop_editor_url):
+
+    home_url = "https://geotastic.net/home"
+    cookie_accept_btn = "v-btn.v-btn--block.v-btn--outlined.theme--dark.v-size--default.success--text"
+    login_btn = "mr-3.v-btn.v-btn--is-elevated.v-btn--has-bg.theme--dark.v-size--default.primary"
+
+    driver.get(home_url)
+    time.sleep(5)
+    write_page_source_to_file(home_url, driver.page_source)
+
+    #accept cookies
+    driver.find_element(By.CLASS_NAME, cookie_accept_btn).click()
+    #open login window
+    driver.find_element(By.CLASS_NAME, login_btn).click()
+
+    time.sleep(5)
+    write_page_source_to_file(driver.current_url, driver.page_source)
+
+    #insert user name
+    login_confirm_btn = "v-btn.v-btn--is-elevated.v-btn--has-bg.theme--dark.v-size--default.primary"
+    user_name_element = "input-213"
+    pas_element = "input-214"
+
+    user_name = input("Enter user name:")
+    driver.find_element(By.ID, user_name_element).send_keys(user_name)
+    user_name = "0"
+    pas = getpass.getpass(prompt='Enter password:')
+    driver.find_element(By.ID, pas_element).send_keys(pas)
+    pas = "0"
+    time.sleep(2)
+    buttons = driver.find_elements(By.CLASS_NAME, login_confirm_btn)
+    
+    for button in buttons:
+        print(button.text)
+        if button.text == "LOGIN":
+            button.click()
+            break
+
+    time.sleep(5)
+    #navigate to drop editor url
+    driver.get(drop_editor_url)
+    
+    time.sleep(5)
+    write_page_source_to_file(driver.current_url, driver.page_source)
+
+def upload_chunks_to_geotastic(chunked_csv_path_list, drop_editor_url):
+
+    global url_count
+    url_count = 0
+
+    #build web driver, utilizes geckodriver
+    #geckodriver_path = os.path.join(os.path.join('.','prerequisites'),'geckodriver.exe')
+    driver = webdriver.Firefox()
+
+    try:
+        navigate_to_drop_editor(driver)
+    except:
+        err_msg = "Failed to navigate to drop editor."
+        err_fct(err_msg)
+        driver.quit()
+        return
+
+    
 
 def main():
     
@@ -102,13 +178,14 @@ def main():
     argParser = argparse.ArgumentParser()
     argParser.add_argument("-f", "--csvpath", action="store", help="Path to CSV file with coordinates.", required=True)
     argParser.add_argument("-o", "--outpath", action="store", help="Path to save the chunked CSV files to.", required=True)
+    argParser.add_argument("-el", "--editorurl", action="store", help="Map drop editor link.", required=True)
     argParser.add_argument("-cs", "--chunksize", default='500', action="store", help="Chunk size of each output CSV file.", required=False)
 
     args = argParser.parse_args()
 
     chunked_csv_path_list = split_csv(args.csvpath, args.outpath, chunk_size=int(args.chunksize))
 
-    upload_chunks_to_geotastic(chunked_csv_path_list)
+    upload_chunks_to_geotastic(chunked_csv_path_list, args.editorurl)
 
     exit(0)
 
