@@ -1,0 +1,1 @@
+This is a work-in-progress solution for fixing the slow adding of drops for Geotastic custom maps. Once finished, this script is supposed to make it possible to add a lot of drops to a custom map, which is currently limited by slow server-side parsing speeds of large CSV files.
