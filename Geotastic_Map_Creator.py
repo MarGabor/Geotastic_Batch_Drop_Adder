@@ -92,7 +92,7 @@ def split_csv(csv_path, out_path, chunk_size):
 
 def upload_chunks_to_geotastic(chunked_csv_path_list):
 
-    driver = webdriver.Firefox()
+    driver = selenium.webdriver.Firefox()
 
 def main():
     
