@@ -154,13 +154,16 @@ def navigate_to_drop_editor(driver, drop_editor_url):
             button.click()
             break
 
-    time.sleep(5)
+    time.sleep(3)
     #navigate to drop editor url
     driver.get(drop_editor_url)
 
+    time.sleep(5)
+
     perf_mode_btn_css_desc = "i.v-icon.notranslate.mdi.mdi-speedometer.theme--dark"
     perf_mode_btns = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, perf_mode_btn_css_desc)))
-    perf_mode_btns[1].click()
+    for perf_mode_btn in perf_mode_btns:
+        perf_mode_btn.click()
     
     time.sleep(5)
     write_page_source_to_file(driver.current_url, driver.page_source)
