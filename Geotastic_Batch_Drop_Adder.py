@@ -1,8 +1,6 @@
 import argparse
-import pandas
 from datetime import datetime
 import os
-import math
 import time
 import getpass
 import sys
