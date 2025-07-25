@@ -3,11 +3,16 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-# test
+# files
+example_call.txt
+
+# prerequisites
+prerequisites/
 
 # I/O directories
 chunked_csv/
 data/
+page_sources/
 
 # User-specific files
 *.rsuser
@@ -15,6 +20,7 @@ data/
 *.user
 *.userosscache
 *.sln.docstates
+*.log
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
