@@ -6,10 +6,17 @@ This script will take any CSV file of coordinates (with columns "lattitude, long
 1. It wasn't necessary for me (Win 10, 64-bit), but you might need to manually install and add [Geckodriver](https://github.com/mozilla/geckodriver/releases) to your **PATH** variable.
 2. Installing Python 3.9+ (very probable to also work with previous versions)
 3. Installing packages
-'''
+```
 pip install argparse selenium
-'''
+```
 4. Download file *Geotastic_Batch_Drop_Adder.py*
 5. Create an empty directory where the CSV chunks will be saved.
 
 ## Using the script
+| Option   | Description | Required |
+| --------- | ------- | ------- |
+| --csvpath  |  Specify path to large CSV file. | Yes |
+| --outpath  | Specify path to directory where CSV chunks are saved. | Yes |
+| --editorurl | Specify URL of a Geotastic map or drop group in editor mode.  | Yes |
+| --chunksize | Provide an integer to control chunk size of CSV files. (Default: 500 drops/file)  | No |
+| --dropfixtimeout    | When uploading a chunk, Geotastic will most likely ask to fix the provided drops. This usually takes a little while. You can provide a timeout in seconds, if adding chunks takes longer. (Default: 90 seconds) | No |
