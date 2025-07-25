@@ -20,3 +20,11 @@ pip install argparse selenium
 | --editorurl | Specify URL of a Geotastic map or drop group in editor mode.  | Yes |
 | --chunksize | Provide an integer to control chunk size of CSV files. (Default: 500 drops/file)  | No |
 | --dropfixtimeout    | When uploading a chunk, Geotastic will most likely ask to fix the provided drops. This usually takes a little while. You can provide a timeout in seconds, if adding chunks takes longer. (Default: 90 seconds) | No |
+
+An example call using Windows' ```cmd```:
+
+```
+python -m Geotastic_Map_Creator --csvpath ".\data\Generated map (5486 locations).csv" --outpath .\chunked_csv\ --editorurl https://geotastic.net/map-editor/drop-editor/group/12345 --chunksize 300
+```
+
+# Enjoy. Feel free to share bugs or improve the code. I might or might not respond to that. This is really just a script to save me the annoyance of creating larger maps in Geotastic.
