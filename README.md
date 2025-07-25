@@ -27,4 +27,4 @@ An example call using Windows' ```cmd```:
 python -m Geotastic_Map_Creator --csvpath ".\data\Generated map (5486 locations).csv" --outpath .\chunked_csv\ --editorurl https://geotastic.net/map-editor/drop-editor/group/12345 --chunksize 300
 ```
 
-# Enjoy. Feel free to share bugs or improve the code. I might or might not respond to that. This is really just a script to save me the annoyance of creating larger maps in Geotastic.
+### Enjoy. Feel free to share bugs or improve the code. I might or might not respond to that. This is really just a script to save me the annoyance of creating larger maps in Geotastic.
