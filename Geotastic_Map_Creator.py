@@ -160,6 +160,7 @@ def navigate_to_drop_editor(driver, drop_editor_url):
 
     time.sleep(5)
 
+    #click on performance mode button
     perf_mode_btn_css_desc = "i.v-icon.notranslate.mdi.mdi-speedometer.theme--dark"
     perf_mode_btns = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, perf_mode_btn_css_desc)))
     for perf_mode_btn in perf_mode_btns:
@@ -167,6 +168,67 @@ def navigate_to_drop_editor(driver, drop_editor_url):
     
     time.sleep(5)
     write_page_source_to_file(driver.current_url, driver.page_source)
+
+def upload_single_chunk_to_geotastic(driver, chunked_csv_path, fix_drop_timeout):
+
+    import_btn_css_selector = "i.v-icon.notranslate.mdi-database-import.theme--dark"
+    fix_btn_element = "v-btn.v-btn--block.v-btn--outlined.theme--dark.v-size--small.warning--text"
+    upload_input_class_desc = "v-file-input__text.v-file-input__text--placeholder"
+
+    #click on "import drops"
+    import_btn = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, import_btn_css_selector)))
+    import_btn.click()
+
+    #upload file
+    abs_chunked_csv_path = os.path.join(SCRIPT_DIR, chunked_csv_path)
+    try:
+        upload_input_present = WebDriverWait(driver, 10).until(EC.text_to_be_present_in_element((By.CLASS_NAME, upload_input_class_desc), "Select file(s) to import"))
+        if upload_input_present:
+            driver.find_element(By.CSS_SELECTOR, 'input[placeholder*="Select"]').send_keys(abs_chunked_csv_path)
+    except:
+        err_msg = "Could not upload chunk file."
+        err_fct(err_msg, sys.exc_info())
+        raise
+
+    time.sleep(3)
+
+    #fixing drops before import. if it somehow fails or is not necessary, try to import anyway
+    try:
+        #next 3 lines are clunky, but may be necessary
+        fix_buttons = driver.find_elements(By.CLASS_NAME, fix_btn_element)
+        for fix_button in fix_buttons:
+            fix_button.click()
+    except:
+        err_msg = "Could not find or click fix button."
+        err_fct(err_msg, sys.exc_info())
+        pass
+
+    #fixing drops will take a while
+    import_chunk_btn_descriptor = "v-btn.v-btn--block.v-btn--disabled.v-btn--has-bg.theme--dark.v-size--default"
+    import_chunk_btn_desc_enabled = "v-btn.v-btn--block.v-btn--is-elevated.v-btn--has-bg.theme--dark.v-size--default.primary"
+        
+    try:
+        import_chunk_btn = WebDriverWait(driver, fix_drop_timeout).until(EC.presence_of_element_located((By.CLASS_NAME, import_chunk_btn_desc_enabled)))
+        import_chunk_btn.click()
+    except:
+        err_msg = "Drop import button did not become available within set timeout."
+        err_fct(err_msg, sys.exc_info())
+        raise
+
+    #wait for "import successful" message and click close button
+    info_texts = []
+    close_btn_desc = "v-btn.v-btn--text.theme--dark.v-size--default.white--text"
+    import_success_css_desc = "h2.mb-0.white--text"
+    while True:
+        info_texts.clear()
+        info_texts = WebDriverWait(driver, fix_drop_timeout).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, import_success_css_desc)))
+        for info_text in info_texts:
+            if info_text.text == "IMPORT WAS SUCCESSFUL":
+                driver.find_element(By.CLASS_NAME, close_btn_desc).click()
+                break
+        else:
+            continue
+        break
 
 def upload_chunks_to_geotastic(chunked_csv_path_list, drop_editor_url, fix_drop_timeout):
 
@@ -186,65 +248,15 @@ def upload_chunks_to_geotastic(chunked_csv_path_list, drop_editor_url, fix_drop_
         return
 
     #upload chunks
-    import_btn_css_selector = "i.v-icon.notranslate.mdi-database-import.theme--dark"
-    fix_btn_element = "v-btn.v-btn--block.v-btn--outlined.theme--dark.v-size--small.warning--text"
-    upload_input_class_desc = "v-file-input__text.v-file-input__text--placeholder"
+    
     for chunked_csv_path in chunked_csv_path_list:
-        
-        #click on "import drops"
-        import_btn = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, import_btn_css_selector)))
-        import_btn.click()
-
-        #upload file
-        abs_chunked_csv_path = os.path.join(SCRIPT_DIR, chunked_csv_path)
         try:
-            upload_input_present = WebDriverWait(driver, 10).until(EC.text_to_be_present_in_element((By.CLASS_NAME, upload_input_class_desc), "Select file(s) to import"))
-            if upload_input_present:
-                driver.find_element(By.CSS_SELECTOR, 'input[placeholder*="Select"]').send_keys(abs_chunked_csv_path)
+            upload_single_chunk_to_geotastic(driver, chunked_csv_path, fix_drop_timeout)
         except:
-            err_msg = "Could not upload chunk file."
+            err_msg = "Error while uploading chunk %s" % chunked_csv_path
             err_fct(err_msg, sys.exc_info())
             raise
-
-        time.sleep(3)
-
-        #fixing drops before import. if it somehow fails or is not necessary, try to import anyway
-        try:
-            #next 3 lines are clunky, but may be necessary
-            fix_buttons = driver.find_elements(By.CLASS_NAME, fix_btn_element)
-            for fix_button in fix_buttons:
-                fix_button.click()
-        except:
-            err_msg = "Could not find or click fix button."
-            err_fct(err_msg, sys.exc_info())
-            pass
-
-        #fixing drops will take a while
-        import_chunk_btn_descriptor = "v-btn.v-btn--block.v-btn--disabled.v-btn--has-bg.theme--dark.v-size--default"
-        import_chunk_btn_desc_enabled = "v-btn.v-btn--block.v-btn--is-elevated.v-btn--has-bg.theme--dark.v-size--default.primary"
         
-        try:
-            import_chunk_btn = WebDriverWait(driver, fix_drop_timeout).until(EC.presence_of_element_located((By.CLASS_NAME, import_chunk_btn_desc_enabled)))
-            import_chunk_btn.click()
-        except:
-            err_msg = "Drop import button did not become available within set timeout."
-            err_fct(err_msg, sys.exc_info())
-            raise
-
-        #wait for "import successful" message and click close button
-        info_texts = []
-        close_btn_desc = "v-btn.v-btn--text.theme--dark.v-size--default.white--text"
-        import_success_css_desc = "h2.mb-0.white--text"
-        while True:
-            info_texts.clear()
-            info_texts = WebDriverWait(driver, fix_drop_timeout).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, import_success_css_desc)))
-            for info_text in info_texts:
-                if info_text.text == "IMPORT WAS SUCCESSFUL":
-                    driver.find_element(By.CLASS_NAME, close_btn_desc).click()
-                    break
-            else:
-                continue
-            break
 
 def main():
     
