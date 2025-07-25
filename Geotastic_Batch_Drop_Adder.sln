@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35521.163 d17.12
+VisualStudioVersion = 17.12.35521.163
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Geotastic_Map_Creator", "Geotastic_Map_Creator.pyproj", "{3213E255-0FB8-4AB7-878B-A40B5D9923C3}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Geotastic_Batch_Drop_Adder", "Geotastic_Batch_Drop_Adder.pyproj", "{3213E255-0FB8-4AB7-878B-A40B5D9923C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,13 +3,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>3213e255-0fb8-4ab7-878b-a40b5d9923c3</ProjectGuid>
-    <ProjectHome>.</ProjectHome>
-    <StartupFile>Geotastic_Map_Creator.py</StartupFile>
+    <ProjectHome>
+    </ProjectHome>
+    <StartupFile>Geotastic_Batch_Drop_Adder.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>Geotastic_Map_Creator</Name>
+    <Name>Geotastic_Batch_Drop_Adder</Name>
     <RootNamespace>Geotastic_Map_Creator</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -21,7 +22,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Geotastic_Map_Creator.py" />
+    <Compile Include="Geotastic_Batch_Drop_Adder.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
