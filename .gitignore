@@ -21,6 +21,7 @@ page_sources/
 *.userosscache
 *.sln.docstates
 *.log
+*.json
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

@@ -4,6 +4,7 @@ import os
 import time
 import getpass
 import sys
+import json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -66,6 +67,12 @@ def create_dir_safely(path):
         err_fct(errMsg)
         exit(1)
 
+def clear_chunk_dir(out_path):
+    file_name_list = os.listdir(out_path)
+    for file_name in file_name_list:
+        file_path = os.path.join(out_path, file_name)
+        os.remove(file_path)
+
 #splits csv file in a number of smaller csv files
 #returns list of chunk paths
 # (str,str,int) -> [str, str, ...]
@@ -95,12 +102,13 @@ def split_csv(csv_path, out_path, chunk_size):
                 i += 1
         #line iterator ends once it reaches EOF, thus this part writes the remainder of the coordinates to a file, when chunk size
         #does not perfectly divide the total number of coordinates
-        chunk_csv_name = os.path.splitext(os.path.split(csv_path)[1])[0] + '_' + str(chunk_counter) + '.csv'
-        out_file_path = os.path.join(out_path, chunk_csv_name)
-        out_file_path_list.append(out_file_path)
-        with open(out_file_path, 'w') as out_csv_chunk_file:
-            for out_line in line_list:
-                out_csv_chunk_file.write(out_line)
+        if len(line_list) > 1:
+            chunk_csv_name = os.path.splitext(os.path.split(csv_path)[1])[0] + '_' + str(chunk_counter) + '.csv'
+            out_file_path = os.path.join(out_path, chunk_csv_name)
+            out_file_path_list.append(out_file_path)
+            with open(out_file_path, 'w') as out_csv_chunk_file:
+                for out_line in line_list:
+                    out_csv_chunk_file.write(out_line)
 
     return out_file_path_list
 
@@ -114,6 +122,18 @@ def write_page_source_to_file(url, source):
         page_source_file.write("\n")
         page_source_file.write("\n")
         page_source_file.write(source)
+
+def write_set_to_file(file_path_set, dest_full_path):
+    file_path_list = list(file_path_set)
+    with open(dest_full_path, "w") as file:
+        json.dump(file_path_list, file)
+
+def load_json(file_path):
+    with open(file_path, "r") as file:
+        file_path_list = json.load(file)
+    file_path_set = set(file_path_list)
+
+    return file_path_set
 
 def navigate_to_drop_editor(driver, drop_editor_url):
 
@@ -133,17 +153,21 @@ def navigate_to_drop_editor(driver, drop_editor_url):
     time.sleep(5)
     write_page_source_to_file(driver.current_url, driver.page_source)
 
+    
     #insert user name
     login_confirm_btn = "v-btn.v-btn--is-elevated.v-btn--has-bg.theme--dark.v-size--default.primary"
-    user_name_element = "input-213"
-    pas_element = "input-214"
+    user_name_class_desc = "v-label.theme--dark"
+    user_name_input_present = WebDriverWait(driver, 10).until(EC.text_to_be_present_in_element((By.CLASS_NAME, user_name_class_desc), "Email"))
+    if user_name_input_present:
+        user_name = input("Enter user name:")
+        driver.find_element(By.CSS_SELECTOR, 'input[type*="email"]').send_keys(user_name)
+        user_name = "0"
 
-    user_name = input("Enter user name:")
-    driver.find_element(By.ID, user_name_element).send_keys(user_name)
-    user_name = "0"
-    pas = getpass.getpass(prompt='Enter password:')
-    driver.find_element(By.ID, pas_element).send_keys(pas)
-    pas = "0"
+        pas = getpass.getpass(prompt='Enter password:')
+        driver.find_element(By.CSS_SELECTOR, 'input[type*="password"]').send_keys(pas)
+        pas = "0"
+
+    
     time.sleep(2)
     buttons = driver.find_elements(By.CLASS_NAME, login_confirm_btn)
     
@@ -153,6 +177,8 @@ def navigate_to_drop_editor(driver, drop_editor_url):
             break
 
     time.sleep(3)
+   
+
     #navigate to drop editor url
     driver.get(drop_editor_url)
 
@@ -228,32 +254,40 @@ def upload_single_chunk_to_geotastic(driver, chunked_csv_path, fix_drop_timeout)
             continue
         break
 
-def upload_chunks_to_geotastic(chunked_csv_path_list, drop_editor_url, fix_drop_timeout):
-
-    global url_count
-    url_count = 0
-
-    #build web driver, utilizes geckodriver
-    #geckodriver_path = os.path.join(os.path.join('.','prerequisites'),'geckodriver.exe')
-    driver = webdriver.Firefox()
+def upload_chunks_to_geotastic(chunked_csv_path_list, drop_editor_url, fix_drop_timeout, done_chunks_set):
 
     try:
-        navigate_to_drop_editor(driver, drop_editor_url)
-    except:
-        err_msg = "Failed to navigate to drop editor."
-        err_fct(err_msg, sys.exc_info())
-        driver.quit()
-        return
 
-    #upload chunks
-    
-    for chunked_csv_path in chunked_csv_path_list:
+        global url_count
+        url_count = 0
+
+        #build web driver, utilizes geckodriver
+        #geckodriver_path = os.path.join(os.path.join('.','prerequisites'),'geckodriver.exe')
+        driver = webdriver.Firefox()
+
         try:
-            upload_single_chunk_to_geotastic(driver, chunked_csv_path, fix_drop_timeout)
+            navigate_to_drop_editor(driver, drop_editor_url)
         except:
-            err_msg = "Error while uploading chunk %s" % chunked_csv_path
+            err_msg = "Failed to navigate to drop editor."
             err_fct(err_msg, sys.exc_info())
             raise
+    
+        #upload chunks
+        chunked_csv_path_set = set(chunked_csv_path_list)
+        remaining_chunks_path_set = chunked_csv_path_set.difference(done_chunks_set)
+
+        for remaining_chunk_path in remaining_chunks_path_set:
+
+            try:
+                upload_single_chunk_to_geotastic(driver, remaining_chunk_path, fix_drop_timeout)
+            except:
+                err_msg = "Error while uploading chunk %s" % remaining_chunk_path
+                err_fct(err_msg, sys.exc_info())
+            else:
+                done_chunks_set.add(remaining_chunk_path)
+                
+    finally:
+        return done_chunks_set
         
 
 def main():
@@ -266,12 +300,34 @@ def main():
     argParser.add_argument("-el", "--editorurl", action="store", help="Map drop editor link.", required=True)
     argParser.add_argument("-cs", "--chunksize", default='500', action="store", help="Chunk size of each output CSV file.", required=False)
     argParser.add_argument("-dft", "--dropfixtimeout", default='90', action="store", help="Timeout for fixing drops of each chunk. Recommended higher for greater chunk size.", required=False)
+    argParser.add_argument("-cj", "--cont", default=0, action="count", help="If uploading chunks is to be continued for whatever reason, then you can provide this flag.", required=False)
 
     args = argParser.parse_args()
 
+    clear_chunk_dir(args.outpath)
+
+    backup_dest_file_name = os.path.splitext(os.path.split(args.csvpath)[1])[0] + ".json"
+    backup_dest_full_path = os.path.join(SCRIPT_DIR, backup_dest_file_name)
+
+    if args.cont > 0:
+        done_chunks_set = load_json(backup_dest_full_path)
+    else:
+        done_chunks_set = set()
+
     chunked_csv_path_list = split_csv(args.csvpath, args.outpath, chunk_size=int(args.chunksize))
 
-    upload_chunks_to_geotastic(chunked_csv_path_list, args.editorurl, int(args.dropfixtimeout))
+    try:
+        done_chunks_set = upload_chunks_to_geotastic(chunked_csv_path_list, args.editorurl, int(args.dropfixtimeout), done_chunks_set)
+    except:
+        err_msg = "Uploading chunks failed part-way through."
+        err_fct(err_msg, sys.exc_info())
+    finally:   
+        try:
+            write_set_to_file(done_chunks_set, backup_dest_full_path)
+        except:
+            err_msg_2 = "Error while writing backup JSON."
+            err_fct(err_msg_2, sys.exc_info())
+            raise
 
     exit(0)
 
