@@ -20,6 +20,7 @@ pip install argparse selenium
 | --editorurl | Specify URL of a Geotastic map or drop group in editor mode.  | Yes |
 | --chunksize | Provide an integer to control chunk size of CSV files. (Default: 500 drops/file)  | No |
 | --dropfixtimeout    | When uploading a chunk, Geotastic will most likely ask to fix the provided drops. This usually takes a little while. You can provide a timeout in seconds, if adding chunks takes longer. (Default: 90 seconds) | No |
+| --cont | Provide this flag to continue a previous run that failed part-way through.   | No |
 
 An example call using Windows' ```cmd```:
 
